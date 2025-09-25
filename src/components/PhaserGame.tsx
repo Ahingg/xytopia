@@ -1,41 +1,73 @@
 // src/components/PhaserGame.tsx
-import Phaser from 'phaser';
-import { useEffect, useRef } from 'react';
-import { MainScene } from '../game/scenes/MainScene';
+import Phaser from "phaser";
+import { useEffect, useRef } from "react";
+import { MainScene } from "../game/scenes/MainScene";
+import { WelcomeScene } from "../game/scenes/WelcomeScene";
 
 export const PhaserGame = () => {
-  // Use a ref to target the div where the game will be rendered
-  const gameContainer = useRef<HTMLDivElement>(null);
-  // Use a ref to hold the game instance
-  const gameInstance = useRef<Phaser.Game | null>(null);
+    const gameContainer = useRef<HTMLDivElement>(null);
+    const gameInstance = useRef<Phaser.Game | null>(null);
 
-  useEffect(() => {
-    // Ensure we only initialize the game once
-    if (gameInstance.current || !gameContainer.current) {
-      return;
-    }
+    useEffect(() => {
+        if (gameInstance.current || !gameContainer.current) {
+            return;
+        }
 
-    const config: Phaser.Types.Core.GameConfig = {
-      type: Phaser.AUTO, // Automatically choose WebGL or Canvas
-      parent: gameContainer.current, // The div to render the game in
-      width: 800,
-      height: 600,
-      backgroundColor: '#2d2d2d',
-      scene: [
-        MainScene, // Add our scene to the game
-        // Add other scenes here
-      ],
-    };
+        const config: Phaser.Types.Core.GameConfig = {
+            type: Phaser.AUTO,
+            parent: gameContainer.current,
+            width: "100%",
+            height: "100%",
+            backgroundColor: "#1a1a2e",
+            scale: {
+                mode: Phaser.Scale.RESIZE,
+                autoCenter: Phaser.Scale.CENTER_BOTH,
+                width: "100%",
+                height: "100%",
+            },
+            physics: {
+                default: "arcade",
+                arcade: {
+                    gravity: { x: 0, y: 200 },
+                    debug: false,
+                },
+            },
+            scene: [
+              MainScene, // Main game scene
+              WelcomeScene, // Start with welcome scene
+            ],
+        };
 
-    // Create a new Phaser game instance
-    gameInstance.current = new Phaser.Game(config);
+        // Create a new Phaser game instance
+        gameInstance.current = new Phaser.Game(config);
 
-    // Cleanup function to destroy the game instance when the component unmounts
-    return () => {
-      gameInstance.current?.destroy(true);
-      gameInstance.current = null;
-    };
-  }, []); // The empty dependency array ensures this runs only once on mount
+        // Listen for portfolio navigation event
+        const handlePortfolioNavigation = () => {
+            // This will be handled by the parent component
+            console.log("Navigate to portfolio requested");
+        };
 
-  return <div ref={gameContainer} id="phaser-game-container" />;
+        window.addEventListener(
+            "navigateToPortfolio",
+            handlePortfolioNavigation
+        );
+
+        // Cleanup function to destroy the game instance when the component unmounts
+        return () => {
+            window.removeEventListener(
+                "navigateToPortfolio",
+                handlePortfolioNavigation
+            );
+            gameInstance.current?.destroy(true);
+            gameInstance.current = null;
+        };
+    }, []); // The empty dependency array ensures this runs only once on mount
+
+    return (
+        <div
+            ref={gameContainer}
+            id="phaser-game-container"
+            className="w-full h-full"
+        />
+    );
 };
